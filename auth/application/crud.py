@@ -1,11 +1,11 @@
 import random
 import uuid
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from application.validate import AuthUser, GetCode
 from application.serialized import Answer
 from datetime import datetime, timedelta, UTC
-
-redis: list = []
+from .redis_init import get_redis_client
+from redis.asyncio import Redis
 
 router = APIRouter(
     prefix="/users",
@@ -15,23 +15,15 @@ router = APIRouter(
 
 
 @router.post("/auth/telephone", response_model=Answer)
-async def auth_telephone(data: AuthUser) -> Answer:
-
+async def auth_telephone(
+    data: AuthUser, redis: Redis = Depends(get_redis_client)
+) -> Answer:
     query_id = str(uuid.uuid4())
     telephone = data.telephone
-    code = random.randint(0, 999999)
-    expired: datetime = datetime.now(UTC) + timedelta(minutes=5)
+    code = f"{random.randint(0, 999999):06d}"  # 6 цифр с ведущими нулями
+    expired = datetime.now(UTC) + timedelta(minutes=5)
 
-    sms_query: dict = {
-        "query_id": query_id,
-        "telephone": telephone,
-        "code": code,
-        "expired": expired,
-    }
-
-    redis.append(sms_query)
-
-    print(sms_query)
+    print(f"Code: {code}")
 
     return Answer(
         data={
@@ -44,41 +36,35 @@ async def auth_telephone(data: AuthUser) -> Answer:
 
 
 @router.post("/auth/code", response_model=Answer)
-async def auth_code(data: GetCode) -> Answer:
+async def auth_code(data: GetCode, redis: Redis = Depends(get_redis_client)) -> Answer:
+    value = await redis.get(data.query_id)
+    if not value:
+        raise HTTPException(status_code=404, detail="Code expired or not found")
 
-    print(data)
+    telephone, code = value.split("$")
 
-    if data.query_id is None or data.telephone is None or data.code is None:
-        raise HTTPException(
-            status_code=400, detail="Invalid query_id, telephone or code"
-        )
-
-    inv = HTTPException(status_code=401, detail="Invalid code")
-
-    try:
-        for row in redis:
-            if (
-                row["query_id"] == data.query_id
-                and row["telephone"] == data.telephone
-                and row["code"] == data.code
-            ):
-                if row["expired"] < datetime.now(UTC):
-                    raise inv
-                else:
-                    redis.remove(row)
-                    break
-            else:
-                raise inv
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid code")
+    if telephone != data.telephone or code != data.code:
+        raise HTTPException(status_code=400, detail="Invalid code")
 
     return Answer(
-        data=data,
+        message="Code verified successfully!",
     )
 
 
+@router.post("/auth/cloud_key", response_model=Answer)
+async def auth_cloud_key():
+    pass
+
+
 @router.get("/auth/redis", response_model=Answer)
-async def auth() -> Answer:
+async def get_redis_value(
+    query_id: str, redis: Redis = Depends(get_redis_client)
+) -> Answer:
+    value = await redis.get(query_id)
+    if not value:
+        raise HTTPException(status_code=404, detail="Value not found")
+
     return Answer(
-        data=redis,
+        data={"value": value},
+        message="Value retrieved successfully",
     )

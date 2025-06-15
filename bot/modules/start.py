@@ -13,6 +13,8 @@ async def start(message: Message):
         + md.italic(md.quote(" - generate authorization number\n"))
         + "/myphone"
         + md.italic(md.quote(" - view your authorization number\n"))
+        + "/delete"
+        + md.italic(md.quote(" - delete your authorization number\n"))
     )
     await message.answer(message_text)
 

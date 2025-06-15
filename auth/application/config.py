@@ -6,6 +6,14 @@ from pathlib import Path
 load_dotenv()
 
 
+class Redis(BaseModel):
+    URI: str = os.getenv("REDIS_URI")
+
+
+class Taskiq(BaseModel):
+    URI: str = os.getenv("RMQ_URI")
+
+
 class Auth(BaseModel):
     PUBLIC_KEY_PATH: Path = Path(__file__).parent / "certs" / "public.pem"
     PRIVATE_KEY_PATH: Path = Path(__file__).parent / "certs" / "private.pem"
@@ -31,6 +39,8 @@ class Settings(BaseModel):
 
     database: Database = Database()
     auth: Auth = Auth()
+    taskiq: Taskiq = Taskiq()
+    redis: Redis = Redis()
 
 
 settings = Settings()

@@ -22,7 +22,7 @@ async def get_my_phone(message: Message):
             await message.answer(message_text)
         else:
             message_text = (
-                md.bold(md.quote("You don't have a number yet."))
+                md.bold(md.quote("You don't have a number yet.\n"))
                 + md.bold(md.quote("Create one with command "))
                 + md.quote("/create")
             )
