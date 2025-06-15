@@ -3,12 +3,10 @@ from .config import settings
 from contextlib import asynccontextmanager
 from .models import Base
 
-engine = create_async_engine(
-    url=settings.database.URI,
-    echo=settings.database.ECHO
-)
+engine = create_async_engine(url=settings.database.URI, echo=settings.database.ECHO)
 
 AsyncSessionLocal = AsyncSession(bind=engine, expire_on_commit=False)
+
 
 @asynccontextmanager
 async def get_session():
@@ -20,6 +18,7 @@ async def get_session():
             raise
         finally:
             await session.commit()
+
 
 async def reset_database(echo: bool = False):
     async with engine.begin() as conn:

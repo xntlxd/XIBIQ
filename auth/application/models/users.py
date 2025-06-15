@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .mapped import user_id, created_at
 from .base import Base
 
+
 class Users(Base):
     __tablename__ = "users"
 
@@ -16,13 +17,17 @@ class Users(Base):
 
     created_at: Mapped[created_at]
 
+
 class UsersBL:
+    session: AsyncSession
 
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(telephone: str):
+    async def create(self, telephone: str):
         new_user = Users(telephone=telephone)
+
         self.session.add(new_user)
         await self.session.flush()
+
         return new_user

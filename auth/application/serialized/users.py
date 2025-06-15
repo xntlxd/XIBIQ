@@ -2,6 +2,7 @@ from datetime import datetime
 from .tuned import TunedModel
 from pydantic import EmailStr
 
+
 class ShowUser(TunedModel):
     id: int
     telephone: str

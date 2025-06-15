@@ -1,6 +1,4 @@
 from .base import Base
-from .users import Users
+from .users import Users, UsersBL
 
-__all__ = [
-    "Base", "Users"
-]
+__all__ = ["Base", "Users", "UsersBL"]

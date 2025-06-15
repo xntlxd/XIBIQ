@@ -5,9 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "aiogram>=3.20.0.post0",
+    "alembic>=1.16.1",
     "asyncpg>=0.30.0",
+    "cryptography>=45.0.4",
     "fastapi>=0.115.12",
+    "psycopg2>=2.9.10",
     "pydantic[email]>=2.11.7",
+    "pyjwt>=2.10.1",
     "python-dotenv>=1.1.0",
     "sqlalchemy>=2.0.41",
     "uvicorn>=0.34.3",
