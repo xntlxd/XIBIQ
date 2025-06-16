@@ -3,6 +3,4 @@
 *.pyc
 .vscode/
 *.pem
-migrations
-alembic.ini
 .trash

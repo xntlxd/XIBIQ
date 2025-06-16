@@ -2,10 +2,12 @@ import re
 from pydantic import BaseModel, field_validator
 
 
-class GetQuery(BaseModel):
-    query_id: str
+class RegistrationUser(BaseModel):
+    token: str
     telephone: str
-    code: str
+    first_name: str | None = None
+    last_name: str | None = None
+    avatar: str | None = None
 
     @field_validator("telephone")
     def validate_telephone(cls, value: str | None) -> str | None:

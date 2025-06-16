@@ -24,12 +24,6 @@ class AuthUser(BaseModel):
         return cleaned_number
 
 
-class GetCode(BaseModel):
-    query_id: str
-    telephone: str
-    code: str
-
-
 class User(BaseModel):
     id: int
     telephone: str | None

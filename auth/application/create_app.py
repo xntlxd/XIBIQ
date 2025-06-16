@@ -7,8 +7,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="XIBIQ",
-    version="dev/0.0.4",
+    title="XIBIQ/auth",
+    version="dev/0.1",
 )
 
 api = APIRouter(prefix="/api/v1", tags=["api/v1"])

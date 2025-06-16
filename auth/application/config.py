@@ -25,6 +25,7 @@ class Auth(BaseModel):
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30
+    SYSTEM_TOKEN_EXPIRE_MINUTES: int = 60
 
 
 class Database(BaseModel):

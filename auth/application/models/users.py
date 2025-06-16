@@ -9,11 +9,11 @@ class Users(Base):
 
     id: Mapped[user_id]
     telephone: Mapped[str] = mapped_column(unique=True, nullable=False)
-    email: Mapped[str] = mapped_column(unique=True)
+    email: Mapped[str] = mapped_column(unique=True, nullable=True)
 
-    cloud_primary_key: Mapped[str]
-    cloud_secondary_key: Mapped[str]
-    cloud_third_key: Mapped[str]
+    cloud_primary_key: Mapped[str] = mapped_column(nullable=True)
+    cloud_secondary_key: Mapped[str] = mapped_column(nullable=True)
+    cloud_third_key: Mapped[str] = mapped_column(nullable=True)
 
     created_at: Mapped[created_at]
 
