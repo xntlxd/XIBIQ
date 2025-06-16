@@ -1,5 +1,6 @@
 import random
 import uuid
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from application.validate import AuthUser, GetCode
 from application.serialized import Answer
@@ -23,7 +24,14 @@ async def auth_telephone(
     code = f"{random.randint(0, 999999):06d}"  # 6 цифр с ведущими нулями
     expired = datetime.now(UTC) + timedelta(minutes=5)
 
-    print(f"Code: {code}")
+    payload = {
+        "query_id": query_id,
+        "telephone": telephone,
+        "code": code
+    }
+
+    with httpx.Client() as client:
+        response = client.post("http://127.0.0.1:8015/auth/send_code", json=payload)
 
     return Answer(
         data={
@@ -45,6 +53,8 @@ async def auth_code(data: GetCode, redis: Redis = Depends(get_redis_client)) -> 
 
     if telephone != data.telephone or code != data.code:
         raise HTTPException(status_code=400, detail="Invalid code")
+
+    await redis.delete(data.query_id)
 
     return Answer(
         message="Code verified successfully!",

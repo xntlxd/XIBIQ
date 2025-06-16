@@ -1,10 +1,9 @@
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from config import settings
+from application.config import settings
 from contextlib import asynccontextmanager
-from models import Base
+from application.models import Base
 
-# Важно создать engine только один раз
 engine = None
 AsyncSessionLocal = None
 
@@ -16,7 +15,7 @@ async def init_db():
 
     # Создаем таблицы при инициализации
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        # await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
 

@@ -2,15 +2,15 @@ import random
 from aiogram import Router, md
 from aiogram.types import Message
 from aiogram.filters import Command
-from database import get_session
-from models import PhoneNumber
+from application.database import get_session
+from application.models import PhoneNumber
 from sqlalchemy import select
 
 router = Router()
 
 
 async def generate_phone_number():
-    return f"+185{random.randint(10000, 99999)}"
+    return f"185{random.randint(10000, 99999)}"
 
 
 @router.message(Command("create"))

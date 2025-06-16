@@ -2,9 +2,9 @@ import asyncio
 import logging
 from aiogram import Dispatcher
 from dotenv import load_dotenv
-from modules import start, generate, myphone, delete
-from database import init_db
-from create_bot import bot
+from application.modules import start, generate, myphone, delete
+from application.database import init_db
+from application.create_bot import bot
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)

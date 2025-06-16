@@ -1,8 +1,8 @@
 from aiogram import Router, md
 from aiogram.types import Message
 from aiogram.filters import Command
-from database import get_session
-from models import PhoneNumber
+from application.database import get_session
+from application.models import PhoneNumber
 from sqlalchemy import select
 
 router = Router()

@@ -4,8 +4,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from database import get_session
-from models import PhoneNumber
+from application.database import get_session
+from application.models import PhoneNumber
 from sqlalchemy import delete
 from datetime import datetime, timedelta
 
