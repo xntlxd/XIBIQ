@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="XIBIQ/auth",
-    version="dev/0.1.1",
+    version="dev/0.1.2",
 )
 
 api = APIRouter(prefix="/api/v1", tags=["api/v1"])

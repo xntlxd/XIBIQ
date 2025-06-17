@@ -7,12 +7,14 @@ from datetime import datetime, timedelta, UTC
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 
-from application.validate import AuthUser, GetCode, RegistrationUser
+from jwt import PyJWTError
+
 from application.serialized import Answer
 from application.redis_init import get_redis_codes
 from application.database import get_session
 from application.models import Users
 from application.methods import get_access_payload
+from application.validate import AuthUser, GetCode, RegistrationUser, GetCloudKey
 from application.auth import (
     create_access_token,
     create_refresh_token,
@@ -26,9 +28,11 @@ from redis.exceptions import RedisError
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
+from werkzeug.security import check_password_hash
+
 router = APIRouter(
-    prefix="/users",
-    tags=["users"],
+    prefix="/auth",
+    tags=["auth"],
     responses={404: {"description": "Not found"}},
 )
 
@@ -36,7 +40,7 @@ router = APIRouter(
 
 
 #! Пользователь вводит телефон и получает код
-@router.post("/auth/telephone", response_model=Answer, summary="Получение кода")
+@router.post("/telephone", response_model=Answer, summary="Получение кода")
 async def auth_telephone(data: AuthUser) -> Answer:
     """
     Высылает код на определенный номер!
@@ -91,7 +95,7 @@ async def auth_telephone(data: AuthUser) -> Answer:
 
 
 #! Полученный код пользователь вводит, если код верный то аккаунт либо регистрируется, либо продолжается вход
-@router.post("/auth/code", response_model=Answer, summary="Проверка кода")
+@router.post("/code", response_model=Answer, summary="Проверка кода")
 async def auth_code(
     data: GetCode, request: Request, redis: Redis = Depends(get_redis_codes)
 ) -> Answer:
@@ -175,7 +179,7 @@ async def auth_code(
                 try:
                     async with httpx.AsyncClient() as client:
                         response = await client.post(
-                            "http://127.0.0.1:8015/auth/new_auth",
+                            "http://127.0.0.1:8015/new_auth",
                             json={
                                 "ip": user_ip,
                                 "date": int(datetime.now(UTC).timestamp()),
@@ -223,7 +227,7 @@ async def auth_code(
 
 
 #! Регистрация пользователя и получение токенов
-@router.post("/auth/registration", response_model=Answer, summary="Регистрация")
+@router.post("/registration", response_model=Answer, summary="Регистрация")
 async def auth_registration(data: RegistrationUser):
     """
     Регистрация пользователя! *Пока не работает, тк нет микросервиса с профилем!*
@@ -304,6 +308,63 @@ async def auth_registration(data: RegistrationUser):
 
 # TODO: Сделать вход по облачному ключу [inpr]
 #! Получение токена по облачному ключу
-@router.post("/auth/cloud_key")
-async def auth_cloud_key():
-    pass
+@router.post(
+    "/cloud_key", response_model=Answer, summary="Облачный пароль", tags=["cloud_key"]
+)
+async def auth_cloud_key(data: GetCloudKey):
+    try:
+        payload = decode_token(data.token)
+
+        if payload.get("typ") != "system" or payload.get("act") != "clk":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired token",
+            )
+
+    except PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token verification failed",
+        )
+
+    try:
+        async with get_session() as session:
+            result = await session.execute(
+                select(Users).where(Users.id == data.user_id)
+            )
+            user = result.scalar()
+
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                )
+
+            if not check_password_hash(user.cloud_primary_key, data.cloud_key):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid cloud key",
+                )
+
+            access_payload = await get_access_payload(user)
+            access_token = create_access_token(access_payload, user.id)
+            refresh_token = create_refresh_token(user.id)
+
+            return Answer(
+                data={
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "account_info": {
+                        "user_id": user.id,
+                        "telephone": user.telephone,
+                        "full-fledged": True,
+                    },
+                },
+                message="Cloud key verified successfully!",
+            )
+    except SQLAlchemyError as e:
+        print(f"Database error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify cloud key",
+        )

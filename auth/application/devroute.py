@@ -44,7 +44,7 @@ async def get_token(tokeninfo: Annotated[dict, Depends(gen_token)]):
     return Answer(
         data={
             "token": token,
-            "input": {"type": tokeninfo["type"], "payload": tokeninfo["payload"]},
+            "input": {"type": tokeninfo["type"]},
         },
         message="Token generated successfully!",
     )

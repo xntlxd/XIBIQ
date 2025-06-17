@@ -1,10 +1,7 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
-class GetCloudKeys(BaseModel):
+class GetCloudKey(BaseModel):
     token: str
-
-    cloud_primary_key: str
-    cloud_secondary_key: str
-    cloud_third_key: str
-    email: EmailStr
+    user_id: int
+    cloud_key: str
