@@ -2,23 +2,29 @@ import random
 import uuid
 import httpx
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, status
+
+from datetime import datetime, timedelta, UTC
+
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+
 from application.validate import AuthUser, GetCode, RegistrationUser
 from application.serialized import Answer
-from datetime import datetime, timedelta, UTC
 from application.redis_init import get_redis_codes
-from redis.asyncio import Redis
-from redis.exceptions import RedisError
 from application.database import get_session
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 from application.models import Users
+from application.methods import get_access_payload
 from application.auth import (
     create_access_token,
     create_refresh_token,
     create_system_token,
     decode_token,
 )
+
+from redis.asyncio import Redis
+from redis.exceptions import RedisError
+
+from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 
 router = APIRouter(
     prefix="/users",
@@ -86,7 +92,9 @@ async def auth_telephone(data: AuthUser) -> Answer:
 
 #! Полученный код пользователь вводит, если код верный то аккаунт либо регистрируется, либо продолжается вход
 @router.post("/auth/code", response_model=Answer, summary="Проверка кода")
-async def auth_code(data: GetCode, redis: Redis = Depends(get_redis_codes)) -> Answer:
+async def auth_code(
+    data: GetCode, request: Request, redis: Redis = Depends(get_redis_codes)
+) -> Answer:
     """
     Проверка кода!
     """
@@ -158,9 +166,31 @@ async def auth_code(data: GetCode, redis: Redis = Depends(get_redis_codes)) -> A
                         message="Let's login your account!",
                     )
 
-                access_payload = {"full-fledged": True, "telephone": user.telephone}
+                access_payload = await get_access_payload(user)
                 access_token = create_access_token(access_payload, user.id)
                 refresh_token = create_refresh_token(user.id)
+
+                user_ip = request.client.host
+
+                try:
+                    async with httpx.AsyncClient() as client:
+                        response = await client.post(
+                            "http://127.0.0.1:8015/auth/new_auth",
+                            json={
+                                "ip": user_ip,
+                                "date": int(datetime.now(UTC).timestamp()),
+                                "telephone": user.telephone,
+                            },
+                            timeout=10.0,
+                        )
+
+                        if response.status_code != 200:
+                            raise HTTPException(
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Failed to send SMS code",
+                            )
+                except Exception:
+                    print("Failed to send NewSession message")
 
                 return Answer(
                     data={
@@ -223,7 +253,6 @@ async def auth_registration(data: RegistrationUser):
         # Создание пользователя
         try:
             async with get_session() as session:
-                # Проверяем, не зарегистрирован ли уже пользователь
                 existing_user = await session.execute(
                     select(Users).where(Users.telephone == data.telephone)
                 )
@@ -240,7 +269,7 @@ async def auth_registration(data: RegistrationUser):
 
                 # TODO: Сделать создание профиля
 
-                access_payload = {"full-fledged": True, "telephone": user.telephone}
+                access_payload = {"ffl": True, "telephone": user.telephone}
                 access_token = create_access_token(access_payload, user.id)
                 refresh_token = create_refresh_token(user.id)
 
@@ -273,40 +302,8 @@ async def auth_registration(data: RegistrationUser):
         )
 
 
-# TODO: Сделать вход по облачному ключу
+# TODO: Сделать вход по облачному ключу [inpr]
 #! Получение токена по облачному ключу
-@router.post("auth/cloud_key")
+@router.post("/auth/cloud_key")
 async def auth_cloud_key():
     pass
-
-
-#! Получение значения редис по его ключу [ОНЛИДЕВФИЧА]
-@router.get("/auth/redis", response_model=Answer, summary="РЕДИСКА", tags=["only/dev"])
-async def get_redis_value(
-    query_id: str, redis: Redis = Depends(get_redis_codes)
-) -> Answer:
-    """
-    Получение значения ключа от редиски
-    """
-    try:
-        if not query_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Query ID is required"
-            )
-
-        value = await redis.get(query_id)
-        if not value:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Value not found"
-            )
-
-        return Answer(
-            data={"value": value},
-            message="Value retrieved successfully",
-        )
-    except RedisError as e:
-        print(f"Redis error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get value from Redis",
-        )

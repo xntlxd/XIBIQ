@@ -3,10 +3,10 @@ import re
 from pydantic import BaseModel, field_validator
 
 
-class GetCode(BaseModel):
-    query_id: str
+class NewAuth(BaseModel):
+    ip: str
+    date: int
     telephone: str
-    code: str
 
     @field_validator("telephone")
     def validate_telephone(cls, value: str | None) -> str | None:

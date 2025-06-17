@@ -1,30 +1,35 @@
 import jwt
 import uuid
-from datetime import datetime, timedelta, UTC
+
 from application.config import settings
 
+from datetime import datetime, timedelta, UTC
 
-def create_access_token(data: dict, user_id: int | str | None = None):
+
+def create_access_token(payload: dict | None = None, user_id: int | str | None = None):
+    header = {"alg": "RS256", "typ": "JWT"}
+
+    if payload is None:
+        payload = {}
+    else:
+        acsess_payload = payload.copy()
+
+    if "sub" not in acsess_payload and user_id:
+        acsess_payload["sub"] = str(user_id)
+    elif "sub" in payload:
+        acsess_payload["sub"] = str(acsess_payload["sub"])
+
     NOW = datetime.now(UTC)
     EXP = NOW + timedelta(minutes=settings.auth.ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    header = {"alg": "RS256", "typ": "JWT"}
-
-    payload = data.copy()
-
-    if "sub" not in payload and user_id:
-        payload["sub"] = str(user_id)
-    elif "sub" in payload:
-        payload["sub"] = str(payload["sub"])
-
-    payload["iat"] = NOW.timestamp()
-    payload["nbf"] = NOW.timestamp()
-    payload["exp"] = EXP.timestamp()
-    payload["jti"] = str(uuid.uuid4())
-    payload["typ"] = "access"
+    acsess_payload["iat"] = NOW.timestamp()
+    acsess_payload["nbf"] = NOW.timestamp()
+    acsess_payload["exp"] = EXP.timestamp()
+    acsess_payload["jti"] = str(uuid.uuid4())
+    acsess_payload["typ"] = "access"  # :typ - тип токена
 
     return jwt.encode(
-        payload=payload,
+        payload=acsess_payload,
         key=settings.auth.PRIVATE_KEY_PATH,
         algorithm=settings.auth.ALHORITHM,
         headers=header,

@@ -15,6 +15,12 @@ class Users(Base):
     cloud_secondary_key: Mapped[str] = mapped_column(nullable=True)
     cloud_third_key: Mapped[str] = mapped_column(nullable=True)
 
+    is_admin: Mapped[bool] = mapped_column(default=False)
+    is_sudo: Mapped[bool] = mapped_column(default=False)
+
+    banned: Mapped[bool] = mapped_column(default=False)
+    banned_reason: Mapped[str] = mapped_column(nullable=True)
+
     created_at: Mapped[created_at]
 
 

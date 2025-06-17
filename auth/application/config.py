@@ -35,7 +35,7 @@ class Database(BaseModel):
 
 class Settings(BaseModel):
     HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    PORT: int = 8001
     RELOAD: bool = True
 
     database: Database = Database()

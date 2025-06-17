@@ -1,13 +1,16 @@
+from datetime import datetime, timedelta
+
 from aiogram import Router, F, md
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
 from application.database import get_session
 from application.models import PhoneNumber
+
 from sqlalchemy import delete
-from datetime import datetime, timedelta
 
 router = Router()
 
