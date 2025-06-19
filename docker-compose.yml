@@ -13,6 +13,10 @@ services:
   postgres-auth:
     image: postgres:alpine
     container_name: postgres-auth
+    environment:
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: postgres                       
+      POSTGRES_DB: xibiq_auth 
     env_file:
       - .env
     volumes:
@@ -30,6 +34,10 @@ services:
   postgres-bot:
     image: postgres:alpine
     container_name: postgres-bot
+    environment:
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: postgres                       
+      POSTGRES_DB: xibiq_bot
     env_file:
       - .env
     volumes:

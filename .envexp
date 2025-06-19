@@ -1,5 +1,5 @@
-AUTH_DATABASE_URI=postgresql+asyncpg://user:pass@postgres-auth:5432/db_name
-BOT_DATABASE_URI=postgresql+asyncpg://user:pass@postgres-bot:5432/db_name
+AUTH_DATABASE_URI=postgresql+asyncpg://postgres:pass@postgres-auth:5432/db_name
+BOT_DATABASE_URI=postgresql+asyncpg://postgres:pass@postgres-bot:5432/db_name
 
 REDIS_URI=redis://redis:6379
 
