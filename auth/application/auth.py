@@ -30,7 +30,7 @@ def create_access_token(payload: dict | None = None, user_id: int | str | None =
 
     return jwt.encode(
         payload=acsess_payload,
-        key=settings.auth.PRIVATE_KEY_PATH,
+        key=settings.auth.PRIVATE_KEY,
         algorithm=settings.auth.ALHORITHM,
         headers=header,
     )
@@ -54,18 +54,20 @@ def create_refresh_token(user_id: int | str):
 
     return jwt.encode(
         payload=payload,
-        key=settings.auth.PRIVATE_KEY_PATH,
+        key=settings.auth.PRIVATE_KEY,
         algorithm=settings.auth.ALHORITHM,
         headers=header,
     )
 
 
-def create_system_token(user_id: int | str, action: str | None = None):
+def create_system_token(
+    user_id: int | str, action: str | None = None, data: dict | None = None
+):
     NOW = datetime.now(UTC)
     EXP = NOW + timedelta(minutes=settings.auth.SYSTEM_TOKEN_EXPIRE_MINUTES)
 
     header = {"alg": "RS256", "typ": "JWT"}
-    payload = {}
+    payload = data if data is not None else {}
 
     if isinstance(user_id, int):
         payload["sub"] = str(user_id)
@@ -79,7 +81,7 @@ def create_system_token(user_id: int | str, action: str | None = None):
 
     return jwt.encode(
         payload=payload,
-        key=settings.auth.PRIVATE_KEY_PATH,
+        key=settings.auth.PRIVATE_KEY,
         algorithm=settings.auth.ALHORITHM,
         headers=header,
     )
@@ -88,7 +90,7 @@ def create_system_token(user_id: int | str, action: str | None = None):
 def decode_token(token: str):
     data = jwt.decode(
         jwt=token,
-        key=settings.auth.PUBLIC_KEY_PATH,
+        key=settings.auth.PUBLIC_KEY,
         algorithms=[settings.auth.ALHORITHM],
     )
     return data

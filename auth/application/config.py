@@ -18,8 +18,8 @@ class Auth(BaseModel):
     PUBLIC_KEY_PATH: Path = Path(__file__).parent / "certs" / "public.pem"
     PRIVATE_KEY_PATH: Path = Path(__file__).parent / "certs" / "private.pem"
 
-    PUBLIC_KEY_PATH: str | bytes = PUBLIC_KEY_PATH.read_text()
-    PRIVATE_KEY_PATH: str | bytes = PRIVATE_KEY_PATH.read_text()
+    PUBLIC_KEY: str | bytes = PUBLIC_KEY_PATH.read_text()
+    PRIVATE_KEY: str | bytes = PRIVATE_KEY_PATH.read_text()
 
     ALHORITHM: str = "RS256"
 

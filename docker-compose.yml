@@ -119,6 +119,28 @@ services:
       - ./pyproject.toml:/app/pyproject.toml
       - ./uv.lock:/app/uv.lock
 
+  profile:
+    build:
+      context: .
+      dockerfile: profile/Dockerfile.profile
+    container_name: profile
+    env_file:
+      - .env
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      auth:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./profile:/app
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+
 volumes:
   redis_data:
   postgres_auth_data:

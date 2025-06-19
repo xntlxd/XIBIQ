@@ -159,7 +159,9 @@ async def auth_code(
                     )
 
                 if user.cloud_primary_key:
-                    system_token = create_system_token(user.id, "clk")
+                    system_token = create_system_token(
+                        user.id, "clk", {"telephone": data.telephone}
+                    )
                     return Answer(
                         data={
                             "action": "cloud_key",
@@ -236,7 +238,11 @@ async def auth_registration(data: RegistrationUser):
         # Валидация токена
         try:
             token_data = decode_token(data.token)
-            if token_data.get("typ") != "system" or token_data.get("act") != "reg":
+            if (
+                token_data.get("typ") != "system"
+                or token_data.get("act") != "reg"
+                or data.telephone != token_data.get("telephone")
+            ):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid or expired token",
@@ -268,10 +274,33 @@ async def auth_registration(data: RegistrationUser):
 
                 user = Users(telephone=data.telephone)
                 session.add(user)
+
+                try:
+                    async with httpx.AsyncClient() as client:
+                        response = await client.post(
+                            "http://profile:8002/api/v1/users/",
+                            json={
+                                "telephone": data.telephone,
+                                "first_name": data.first_name,
+                                "last_name": data.last_name,
+                                "avatar": data.avatar,
+                            },
+                        )
+
+                        if response.status_code != 200:
+                            raise HTTPException(
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Failed to create user",
+                            )
+                except Exception as e:
+                    print(f"Failed to send Welcome message: {e}")
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Failed to create user",
+                    )
+
                 await session.commit()
                 await session.refresh(user)
-
-                # TODO: Сделать создание профиля
 
                 access_payload = {"ffl": True, "telephone": user.telephone}
                 access_token = create_access_token(access_payload, user.id)
