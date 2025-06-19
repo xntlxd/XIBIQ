@@ -10,7 +10,11 @@ AsyncSessionLocal = None
 
 async def init_db():
     global engine, AsyncSessionLocal
-    engine = create_async_engine(url=settings.database.URI, echo=settings.database.ECHO)
+    engine = (
+        create_async_engine(url=settings.database.URI, echo=settings.database.ECHO)
+        if engine is None
+        else engine
+    )
     AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
     # Создаем таблицы при инициализации

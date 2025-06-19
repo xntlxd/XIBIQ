@@ -1,0 +1,117 @@
+services:
+  # Redis сервис (общий для всех)
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # Postgres для auth сервиса
+  postgres-auth:
+    image: postgres:alpine
+    container_name: postgres-auth
+    env_file:
+      - .env
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1800s
+      timeout: 5s
+      start_period: 5s
+
+  # Postgres для bot сервиса
+  postgres-bot:
+    image: postgres:alpine
+    container_name: postgres-bot
+    env_file:
+      - .env
+    volumes:
+      - postgres_bot_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1800s
+      timeout: 5s
+      start_period: 5s
+
+  # Auth сервис
+  auth:
+    build:
+      context: .
+      dockerfile: auth/Dockerfile.auth
+    container_name: auth
+    env_file:
+      - .env
+    ports:
+      - "8000:8001"
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/v1/healthcheck"]
+      interval: 3600s
+      timeout: 5s
+      start_period: 10s
+    restart: unless-stopped
+    volumes:
+      - ./auth:/app
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+
+  # API сервис (из bot/Dockerfile.api)
+  api:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile.api
+    container_name: api
+    env_file:
+      - .env
+    ports:
+      - "8015:8015"
+    depends_on:
+      postgres-bot:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      auth:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./bot:/app
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+
+  # Bot сервис
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile.bot
+    container_name: bot
+    env_file:
+      - .env
+    depends_on:
+      postgres-bot:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - ./bot:/app
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+
+volumes:
+  redis_data:
+  postgres_auth_data:
+  postgres_bot_data:

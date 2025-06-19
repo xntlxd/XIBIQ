@@ -29,7 +29,7 @@ class Auth(BaseModel):
 
 
 class Database(BaseModel):
-    URI: str = os.getenv("DATABASE_URI")
+    URI: str = os.getenv("AUTH_DATABASE_URI")
     ECHO: bool = False
 
 

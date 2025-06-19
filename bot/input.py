@@ -3,7 +3,6 @@ import uvicorn
 from datetime import datetime, UTC
 
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 
 from application.validate import GetQuery, NewAuth
 from application.create_bot import bot
@@ -11,7 +10,6 @@ from application.serialized.answer import Answer
 from application.redis_init import get_redis_codes
 from application.database import get_session
 from application.models import PhoneNumber
-from application.config import settings
 from application.methods import get_location_by_ip
 
 from redis.asyncio import Redis
@@ -26,10 +24,10 @@ app = FastAPI(
 )
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.origins.allow_origins,
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=settings.origins.allow_origins,
+# )
 
 
 @app.post("/auth/send_code", response_model=Answer)
@@ -112,4 +110,4 @@ async def new_auth(
 
 
 if __name__ == "__main__":
-    uvicorn.run("input:app", host="127.0.0.1", port=8015, reload=True)
+    uvicorn.run("input:app", host="0.0.0.0", port=8015, reload=True)

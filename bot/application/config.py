@@ -16,7 +16,7 @@ class Redis(BaseModel):
 
 
 class DatabaseSettings(BaseModel):
-    URI: str = os.getenv("DATABASE_URI")
+    URI: str = os.getenv("BOT_DATABASE_URI")
     ECHO: bool = False
 
 

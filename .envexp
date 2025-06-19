@@ -1,0 +1,9 @@
+AUTH_DATABASE_URI=postgresql+asyncpg://user:pass@postgres-auth:5432/db_name
+BOT_DATABASE_URI=postgresql+asyncpg://user:pass@postgres-bot:5432/db_name
+
+REDIS_URI=redis://redis:6379
+
+BOT_TOKEN=TELEGRAM_BOT_TOKEN
+
+POSTGRES_AUTH_DB=xibiq_auth
+POSTGRES_BOT_DB=xibiq_bot

@@ -1,6 +1,8 @@
 .venv/
 .env
+.env.*
 *.pyc
 .vscode/
 *.pem
 .trash
+frontend/

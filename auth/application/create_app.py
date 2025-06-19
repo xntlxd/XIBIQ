@@ -27,6 +27,12 @@ async def ping() -> Answer:
     return Answer(message="pong")
 
 
+@api.get("/healthcheck")
+async def healthcheck() -> Answer:
+    """Health check endpoint"""
+    return {"status": "ok"}
+
+
 # Подключаем остальные роутеры
 api.include_router(authorization.router)
 api.include_router(tokens.router)

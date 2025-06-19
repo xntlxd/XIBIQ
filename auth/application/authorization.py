@@ -36,7 +36,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# TODO: Сделать логику входа через облачный ключ и сделать восстановление
+# TODO: Сделать восстановление
 
 
 #! Пользователь вводит телефон и получает код
@@ -53,7 +53,7 @@ async def auth_telephone(data: AuthUser) -> Answer:
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "http://127.0.0.1:8015/auth/send_code",
+                "http://api:8015/auth/send_code",
                 json={"query_id": query_id, "telephone": data.telephone, "code": code},
                 timeout=10.0,
             )
